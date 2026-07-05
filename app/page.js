@@ -1,66 +1,269 @@
-import Image from "next/image";
+"use client";
+
 import styles from "./page.module.css";
 
+import { useEffect, useState } from "react";
+
+import {
+    LineChart,
+    Line,
+    CartesianGrid,
+    XAxis,
+    YAxis,
+    Tooltip,
+    ResponsiveContainer
+} from "recharts";
+
 export default function Home() {
-  return (
-    <div className={styles.page}>
-      <main className={styles.main}>
-        <Image
-          className={styles.logo}
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className={styles.intro}>
-          <h1>To get started, edit the page.js file.</h1>
-          <p>
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              target="_blank"
-              rel="noopener noreferrer"
+
+
+    const interval = 20;
+    const poolingRate = 2000;
+    const [historico, setHistorico] = useState([]);
+
+    const [isMobile, setIsMobile] = useState(false);
+
+    useEffect(() => {
+
+      function handleResize() {
+          setIsMobile(window.innerWidth < 768);
+      }
+          handleResize();
+
+          window.addEventListener("resize", handleResize);
+
+          return () => window.removeEventListener("resize", handleResize);
+
+    }, []);
+
+    async function atualizar() {
+
+        try {
+
+            const response = await fetch("/api/sensor");
+
+            const json = await response.json();
+
+            if (json.error) return;
+
+            setHistorico(old => {
+
+                const hora = new Date().toLocaleTimeString();
+
+                const novo = [
+                    ...old,
+                    {
+                        hora,
+                        temperatura: json.temperatura,
+                        umidade: json.umidade,
+                        irrigando: json.irrigamento
+                    }
+                ];
+
+                if (novo.length > interval)
+                    novo.shift();
+
+                return novo;
+
+            });
+
+        }
+
+        catch (e) {
+            console.log(e);
+        }
+
+    }
+
+    useEffect(() => {
+
+        atualizar();
+
+        const interval = setInterval(atualizar, poolingRate);
+
+        return () => clearInterval(interval);
+
+    }, []);
+
+    const ultimo = historico[historico.length - 1];
+
+    return (
+
+        <main className={styles.body}>
+
+            <h1 className={styles.title}>
+                🌱 Dashboard da Irrigação
+            </h1>
+
+            <div className={styles.cards}>
+
+                <Card
+                    titulo="Temperatura"
+                    valor={
+                        ultimo
+                            ? `${ultimo.temperatura.toFixed(1)} °C`
+                            : "--"
+                    }
+                    cor="#ef4444"
+                />
+
+                <Card
+                    titulo="Umidade"
+                    valor={
+                        ultimo
+                            ? `${ultimo.umidade.toFixed(1)} %`
+                            : "--"
+                    }
+                    cor="#2563eb"
+                />
+
+                <Card
+                    titulo="Irrigação"
+                    valor={
+                        ultimo
+                            ? ultimo.irrigando
+                                ? "Ligada"
+                                : "Desligada"
+                            : "--"
+                    }
+                    cor={
+                        ultimo?.irrigando
+                            ? "#16a34a"
+                            : "#6b7280"
+                    }
+                />
+
+            </div>
+
+            <div className={styles.graficos}>
+
+                <div className={styles.chartCard}>
+
+                    <h2>Temperatura</h2>
+
+                    <ResponsiveContainer
+                      width="100%"
+                      height={isMobile ? 200 : 300}
+                    >
+
+                        <LineChart data={historico}>
+
+                            <CartesianGrid strokeDasharray="3 3"/>
+
+                            <XAxis dataKey="hora"/>
+
+                            <YAxis domain={[20, 40]} />
+
+                            <Tooltip
+                                contentStyle={{
+                                    backgroundColor: "rgba(255,255,255,0.75)",
+                                    border: "1px solid #ddd",
+                                    borderRadius: 10,
+                                    padding: isMobile ? "5px 8px" : "8px 12px",
+                                    fontSize: isMobile ? 11 : 13,
+                                    boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
+                                    backdropFilter: "blur(6px)"
+                                }}
+                                labelStyle={{
+                                    fontSize: isMobile ? 10 : 12,
+                                    fontWeight: 600
+                                }}
+                                itemStyle={{
+                                    fontSize: isMobile ? 10 : 12,
+                                    padding: 0
+                                }}
+                            />
+
+                            <Line
+                                type="linear"
+                                dataKey="temperatura"
+                                stroke="#ef4444"
+                                strokeWidth={2}
+                                dot={true}
+                                isAnimationActive={false}
+                            />
+
+                        </LineChart>
+
+                    </ResponsiveContainer>
+
+                </div>
+
+                <div className={styles.chartCard}>
+
+                    <h2>Umidade</h2>
+
+                    <ResponsiveContainer
+                      width="100%"
+                      height={isMobile ? 200 : 300}
+                    >
+
+                        <LineChart data={historico}>
+
+                            <CartesianGrid strokeDasharray="3 3"/>
+
+                            <XAxis dataKey="hora"/>
+
+                            <YAxis/>
+
+                            <Tooltip
+                                contentStyle={{
+                                    backgroundColor: "rgba(255,255,255,0.75)",
+                                    border: "1px solid #ddd",
+                                    borderRadius: 10,
+                                    padding: isMobile ? "5px 8px" : "8px 12px",
+                                    fontSize: isMobile ? 11 : 13,
+                                    boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
+                                    backdropFilter: "blur(6px)"
+                                }}
+                                labelStyle={{
+                                    fontSize: isMobile ? 10 : 12,
+                                    fontWeight: 600
+                                }}
+                                itemStyle={{
+                                    fontSize: isMobile ? 10 : 12,
+                                    padding: 0
+                                }}
+                            />
+
+                            <Line
+                                type="linear"
+                                dataKey="umidade"
+                                stroke="#2563eb"
+                                strokeWidth={2}
+                                dot={true}
+                                isAnimationActive={false}
+                            />
+
+                        </LineChart>
+
+                    </ResponsiveContainer>
+
+                </div>
+
+            </div>
+
+        </main>
+
+    );
+
+}
+
+function Card({ titulo, valor, cor }) {
+
+    return (
+        <div className={styles.card}>
+
+            <h3>{titulo}</h3>
+
+            <h1
+                className={styles.cardValue}
+                style={{ color: cor }}
             >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+                {valor}
+            </h1>
+
         </div>
-        <div className={styles.ctas}>
-          <a
-            className={styles.primary}
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className={styles.logo}
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className={styles.secondary}
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
-  );
+    );
+
 }
