@@ -1,36 +1,107 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Soil Monitor Dashboard
 
-## Getting Started
+O **Soil Monitor Dashboard** é uma aplicação desenvolvida em **Next.js** responsável por exibir as medições enviadas pela ESP32 ao servidor Flask.
 
-First, run the development server:
+O Dashboard consulta periodicamente a API através de requisições **HTTP GET** e atualiza os gráficos e indicadores da interface.
+
+---
+
+## Pré-requisitos
+
+- Node.js instalado.
+- Dependências do projeto instaladas:
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+---
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
+## Iniciando o servidor de desenvolvimento
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Execute o comando abaixo informando o endereço IP do computador onde o Dashboard será executado:
 
-## Learn More
+```bash
+npm run dev -- --hostname <IP_DO_COMPUTADOR>
+```
 
-To learn more about Next.js, take a look at the following resources:
+### Exemplos
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+npm run dev -- --hostname 192.168.0.5
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```bash
+npm run dev -- --hostname 10.138.5.112
+```
 
-## Deploy on Vercel
+### Descobrindo o endereço IP
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+No **Prompt de Comando (CMD)** ou **PowerShell**, execute:
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```bash
+ipconfig
+```
+
+Utilize o endereço IPv4 da interface de rede conectada à mesma rede da ESP32.
+
+> **Observação:** informar o parâmetro `--hostname` é recomendado quando outros serviços (como o WSL) estão em execução, garantindo que o servidor Next.js seja iniciado utilizando o endereço IP do computador hospedeiro.
+
+---
+
+## Acessando o Dashboard
+
+Após iniciar o servidor, abra o navegador e acesse:
+
+```text
+http://<IP_DO_COMPUTADOR>:3000
+```
+
+Exemplo:
+
+```text
+http://192.168.0.5:3000
+```
+
+Caso esteja acessando a partir de um smartphone ou outro computador, certifique-se de que todos os dispositivos estejam conectados à mesma rede local.
+
+---
+
+## Configurando o endereço do servidor (API Flask)
+
+O Dashboard obtém as medições realizando requisições **HTTP GET** para a API Flask.
+
+Configure o endereço do servidor editando o arquivo:
+
+```text
+.env.local
+```
+
+Exemplo:
+
+```env
+FLASK_HOST=192.168.0.5
+FLASK_PORT=8080
+```
+
+Após alterar as variáveis de ambiente, reinicie o servidor de desenvolvimento.
+
+---
+
+## Fluxo de comunicação
+
+```text
+ESP32-WROVER
+      │
+      │ HTTP POST
+      ▼
++-------------------+
+|   Flask Server    |
++-------------------+
+      ▲
+      │ HTTP GET
+      │
+Next.js Dashboard
+```
+
+O Dashboard apenas consome os dados disponibilizados pelo servidor. Toda a comunicação com a ESP32 é realizada pela API Flask.

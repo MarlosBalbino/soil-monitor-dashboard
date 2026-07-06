@@ -16,7 +16,6 @@ import {
 
 export default function Home() {
 
-
     const interval = 20;
     const poolingRate = 2000;
     const [historico, setHistorico] = useState([]);
