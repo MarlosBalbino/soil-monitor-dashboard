@@ -1,0 +1,39 @@
+COMANDOS:
+
+ZEPHYR
+
+west build -p always -b esp_wrover_kit/esp32/procpu
+
+West flash --erase
+
+west espressif monitor
+
+conectar_wifi brisa-2789486 ytokjmue
+
+conectar_wifi vaca vaca12345
+
+conectar_wifi <SSD/NOME DA REDE> <SENHA>
+
+
+
+SERVIDOR
+
+py server.py
+
+FRONT END
+
+npm run dev -- --hostname 192.168.0.5
+
+npm run dev -- --hostname <ip-do-PC> (VER VIA IPCONFIG)
+
+
+
+onde muda o IP:
+
+esp32:
+
+src/main.c
+
+dashboard:
+
+route.js
